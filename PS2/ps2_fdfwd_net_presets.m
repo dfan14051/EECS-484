@@ -107,19 +107,19 @@ while (1>0) % infinite loop--ctl-C to stop; edit this to run finite number of ti
     %DEBUG: uncomment the following and prove that your compute_W_derivs
     %yields the same answer as numerical estimatesfor dE/dW
     %comment out to run faster, once debugged
-%    [est_dWkj,delta_L_est]= numer_est_Wkj(W1p,b1_vec,W21,b2_vec,premapped_training_patterns,z1_targets); %and numerical estimate
-%   %DEBUG output: sensitivities computed 2 different ways should be the same
-%     dWL_cum
-%     est_dWkj
-%     delta_L_cum
-%     delta_L_est
-% %    
-% %    dW_Lminus1_cum %display sensitivities dE/dwji
-%     [est_dWji,delta_Lminus1_est]= numer_est_Wji(W1p,b1_vec,W21,b2_vec,premapped_training_patterns,z1_targets); %and numerical estimate
-%     est_dWji
-%     delta_Lminus1_cum
-%     delta_Lminus1_est
-  
+%     [est_dWkj,delta_L_est]= numer_est_Wkj(W1p,b1_vec,W21,b2_vec,premapped_training_patterns,z1_targets); %and numerical estimate
+% %   %DEBUG output: sensitivities computed 2 different ways should be the same
+%      dWL_cum
+%      est_dWkj
+%      delta_L_cum
+%      delta_L_est
+%    
+%      dW_Lminus1_cum %display sensitivities dE/dwji
+%      [est_dWji,delta_Lminus1_est]= numer_est_Wji(W1p,b1_vec,W21,b2_vec,premapped_training_patterns,z1_targets); %and numerical estimate
+%      est_dWji
+%      delta_Lminus1_cum
+%      delta_Lminus1_est
+%   
    %DEBUG: comment out the above lines from DEBUG to DEBUG when ready
 
     %use gradient descent to update all weights:

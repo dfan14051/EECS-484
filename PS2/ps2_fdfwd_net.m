@@ -28,7 +28,7 @@ z_offset = 0.2-zmin
 targets = targets+z_offset*ones(zdim1,zdim2);
 zmax = max(max(targets))
 %DEBUG: reduce the data for testing/debug; comment out lines below when
-%ready
+% %ready
 % training_patterns = training_patterns(:,1:6)
 % targets = targets(:,1:6)
 %DEBUG: end of comment block
@@ -118,7 +118,7 @@ while (1>0) % infinite loop--ctl-C to stop; edit this to run finite number of ti
     
     
     %optional debug: plot out incremental progress every plot_iter iterations
-    plot_iter=100;
+    plot_iter=10000;
     if (iteration-iter1k>plot_iter)
         %expect dE = -eta*delta_L_cum'*delta_L_cum
         [rms,Esqd] = err_eval(W1p,b1_vec,phi1_code,W21,b2_vec,phi2_code,training_patterns,targets);
