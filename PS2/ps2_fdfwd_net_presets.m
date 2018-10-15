@@ -8,7 +8,7 @@ load arm_xy.dat; %training data is stored in this file
 training_patterns = (arm_xy(:,1:2))'; %pattern inputs are columns
 
 %ADJUST THIS: number of interneurons AFTER premapping
-nnodes_layer1=50; 
+nnodes_layer1=100; 
 phi1_code=1; %logsig
 phi2_code=2; %linear  %NOTICE THIS: LINEAR ACTIVATION FNC FOR LAST LAYER (OK)
 
@@ -25,6 +25,10 @@ ymin = min(training_patterns(2,:))
 ymax = max(training_patterns(2,:))
 [Wx1,bvec_x1,Wx2,bvec_x2]=compute_preset_weights(xmin,xmax,Npreset_nodes);
 [Wy1,bvec_y1,Wy2,bvec_y2]=compute_preset_weights(ymin,ymax,Npreset_nodes);
+% Wx1 = Wx1/4;
+% Wx2 = Wx2/4;
+% Wy1 = Wy1/4;
+% Wy2 = Wy2/4;
 phix1_code=1; %logsig
 phix2_code=1; %logsig
 phiy1_code=1; %logsig
@@ -67,6 +71,7 @@ end
 
 %now, append 2 layers to compute output z1; z2 will get its own network
 z1_targets = targets(1,:);
+z2_targets = targets(2,:);
 
 
 
@@ -92,6 +97,17 @@ iteration=0;
 %BP:
 iter1k=0;
 
+etaz2 = 0.001;
+W1pz2 = 1/sqrt(nnodes_layer1)*(2*rand(nnodes_layer1,ndim_inputs)-1); %matrix is nnodes_layer1 x ndim_inputs
+W1p_newz2 = W1pz2;
+b1_vecz2 = 1/sqrt(nnodes_layer1)*(2*rand(nnodes_layer1,1)-1); %bias vector for layer 1
+b1_vec_newz2 = b1_vecz2;
+%weights from interneurons (and bias) to output layer 
+W21z2 = 1/sqrt(nnodes_layer2)*(2*rand(nnodes_layer2,nnodes_layer1)-1); %includes row for bias inputs
+W21_newz2 = W21z2;
+b2_vecz2 = 1/sqrt(nnodes_layer2)*(2*rand(nnodes_layer2,1)-1);
+b2_vec_newz2 = b2_vecz2;
+
 while (1>0) % infinite loop--ctl-C to stop; edit this to run finite number of times
     %compute all derivatives of error metric w/rt all weights; put these
     %derivatives in matrices dWkj and dWji
@@ -104,6 +120,13 @@ while (1>0) % infinite loop--ctl-C to stop; edit this to run finite number of ti
     %FIX THIS FUNCTION...
     [dWL_cum,dW_Lminus1_cum,delta_L_cum,delta_Lminus1_cum] = compute_dW_from_sensitivities(W1p,b1_vec,phi1_code,W21,b2_vec,phi2_code,premapped_training_patterns,z1_targets);
  
+    b2_vecz2 = b2_vec_newz2; %update bias weights, layer 2
+    b1_vecz2 = b1_vec_newz2;
+    W21z2 = W21_newz2;
+    W1pz2 = W1p_newz2;
+    %FIX THIS FUNCTION...
+    [dWL_cumz2,dW_Lminus1_cumz2,delta_L_cumz2,delta_Lminus1_cumz2] = compute_dW_from_sensitivities(W1pz2,b1_vecz2,phi1_code,W21z2,b2_vecz2,phi2_code,premapped_training_patterns,z2_targets);
+    
     %DEBUG: uncomment the following and prove that your compute_W_derivs
     %yields the same answer as numerical estimatesfor dE/dW
     %comment out to run faster, once debugged
@@ -139,9 +162,24 @@ while (1>0) % infinite loop--ctl-C to stop; edit this to run finite number of ti
     end
     eta = eta*1.1 %increase step size
     
+     W1p_newz2=W1pz2-etaz2*dW_Lminus1_cumz2;
+    b1_vec_newz2 =b1_vecz2 - etaz2*delta_Lminus1_cumz2;
+    W21_newz2=W21z2-etaz2*dWL_cumz2;
+    b2_vec_newz2 = b2_vecz2 - etaz2*delta_L_cumz2;
+    [rmsz2,Esqdz2] = err_eval(W1pz2,b1_vecz2,phi1_code,W21z2,b2_vecz2,phi2_code,premapped_training_patterns,z2_targets);
+    [rmsz2,Esqd_newz2] = err_eval(W1p_newz2,b1_vec_newz2,phi1_code,W21_newz2,b2_vec_newz2,phi2_code,premapped_training_patterns,z2_targets);
+    dEz2 = 0.5*(Esqd_newz2-Esqdz2);
     
+    if (dEz2>0) %oops; decrease step size and back up
+        etaz2=0.5*etaz2;
+        W1p_newz2=W1pz2-etaz2*dW_Lminus1_cumz2;
+        b1_vec_newz2 =b1_vecz2 - etaz2*delta_Lminus1_cumz2;
+        W21_newz2=W21z2-etaz2*dWL_cumz2;
+        b2_vec_newz2 = b2_vecz2 - etaz2*delta_L_cumz2;   
+    end
+    etaz2 = etaz2*1.1 %increase step size
     %optional debug: plot out incremental progress every plot_iter iterations
-    plot_iter=100;
+    plot_iter=1000;
     if (iteration-iter1k>plot_iter)
         %expect dE = -eta*delta_L_cum'*delta_L_cum
         [rms,Esqd] = err_eval(W1p,b1_vec,phi1_code,W21,b2_vec,phi2_code,premapped_training_patterns,z1_targets);
@@ -152,18 +190,35 @@ while (1>0) % infinite loop--ctl-C to stop; edit this to run finite number of ti
         dE_expected_b2 = delta_L_cum'*(b2_vec_new-b2_vec)
         dE_expected_b1 = delta_Lminus1_cum'*(b1_vec_new-b1_vec)
         dE_expected = dE_expected_W21+dE_expected_W1p+dE_expected_b2+dE_expected_b1
+        
+        [rmsz2,Esqdz2] = err_eval(W1pz2,b1_vecz2,phi1_code,W21z2,b2_vecz2,phi2_code,premapped_training_patterns,z2_targets);
+        [rmsz2,Esqd_newz2] = err_eval(W1p_newz2,b1_vec_newz2,phi1_code,W21_newz2,b2_vec_newz2,phi2_code,premapped_training_patterns,z2_targets);
+        dEz2 = 0.5*(Esqd_newz2-Esqdz2)
+        dE_expected_W21z2 = sum(sum((W21_newz2-W21z2).*dWL_cumz2))
+        dE_expected_W1pz2 = sum(sum((W1p_newz2-W1pz2).*dW_Lminus1_cumz2))
+        dE_expected_b2z2 = delta_L_cumz2'*(b2_vec_newz2-b2_vecz2)
+        dE_expected_b1z2 = delta_Lminus1_cumz2'*(b1_vec_newz2-b1_vecz2)
+        dE_expectedz2 = dE_expected_W21z2+dE_expected_W1pz2+dE_expected_b2z2+dE_expected_b1z2
  
         
 %         figure(1)
 %premapped_outputs = compute_premapped_outputs(Wx1,bvec_x1,Wx2,bvec_x2,Wy1,bvec_y1,Wy2,bvec_y2,test_inputs_x,test_inputs_y);
-          ffwd_surfplot_w_premap(Wx1,bvec_x1,phix1_code,Wx2,bvec_x2,phix2_code,Wy1,bvec_y1,phiy1_code,Wy2,bvec_y2,phiy2_code,W1p,b1_vec,phi1_code,W21,b2_vec,phi2_code,xmin,xmax,ymin,ymax); 
-         hold on
+        figure(3)  
+        ffwd_surfplot_w_premap(Wx1,bvec_x1,phix1_code,Wx2,bvec_x2,phix2_code,Wy1,bvec_y1,phiy1_code,Wy2,bvec_y2,phiy2_code,W1p,b1_vec,phi1_code,W21,b2_vec,phi2_code,xmin,xmax,ymin,ymax); 
+
+          hold on
          plot3(training_patterns(1,:),training_patterns(2,:),targets(1,:),'*')
          hold off
-   
+         figure(4)
+         ffwd_surfplot_w_premap(Wx1,bvec_x1,phix1_code,Wx2,bvec_x2,phix2_code,Wy1,bvec_y1,phiy1_code,Wy2,bvec_y2,phiy2_code,W1pz2,b1_vecz2,phi1_code,W21z2,b2_vecz2,phi2_code,xmin,xmax,ymin,ymax); 
+
+         hold on
+         plot3(training_patterns(1,:),training_patterns(2,:),targets(2,:),'*')
+         hold off
         iter1k=iteration;
         iteration
         [rmserr,esqd] = err_eval(W1p,b1_vec,phi1_code,W21,b2_vec,phi2_code,premapped_training_patterns,z1_targets)
+        [rmserr,esqd] = err_eval(W1pz2,b1_vecz2,phi1_code,W21z2,b2_vecz2,phi2_code,premapped_training_patterns,z2_targets)
 
         pause(1)
         %eta = input('enter eta: ')

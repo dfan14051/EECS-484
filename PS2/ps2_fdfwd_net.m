@@ -5,7 +5,7 @@
 
 clear all
 
-nnodes_layer1=20; %ADJUST THIS: number of interneurons
+nnodes_layer1=40; %ADJUST THIS: number of interneurons
 %activation fncs: 1 = logsig, 2 = linear
 phi1_code = 1; %set activation type to logsig for layer 1
 phi2_code = 1; %set activation type to logsig for layer 2
