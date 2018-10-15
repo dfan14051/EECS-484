@@ -3,10 +3,13 @@ function [stimuli,target_vecs,Krows,Kcols] = gen_training_data(nrows_image,ncols
 %targets
 nrows_image
 ncols_image
-Nimages = 2; %will want a lot more input images than this
+Nimages = 20; %will want a lot more input images than this
 %try a feature like this:
-k_feature = [1 1 0;
-             0,1,1] %a Tetris-style block
+k_feature = [1 1 1 1 0 0;
+             0,1,0,1,1 1;
+             0,1,0,0,1 1;
+             1,0,0,0,0 1;
+             0,1,0,1,1 0] %a Tetris-style block
 [Krows,Kcols] = size(k_feature)
 stimuli = [];
 target_vecs = [];

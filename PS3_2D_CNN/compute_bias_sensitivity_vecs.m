@@ -17,9 +17,13 @@ phi_prime_L_vecs = fnc_phi_prime(phi_codes{L_layers},x_vecs_L);
 err_vecs = x_vecs_L - targets;
 deltas_L = phi_prime_L_vecs.*err_vecs;
 bias_sensitivity_vecs{L_layers} = deltas_L;
-
+deltas_lp1 = deltas_L;
 %now apply recursion:
 for l = L_layers-1:-1:1
   %FIX ME!!!!
+    x = all_x_vecs{l};
+    phi_prime_l_vecs = fnc_phi_prime(phi_codes{l}, x);
+    deltas_l = (W_matrices{l+1})'*deltas_lp1.*phi_prime_l_vecs;
+    deltas_lp1 = deltas_l;
     bias_sensitivity_vecs{l} = deltas_l;
 end

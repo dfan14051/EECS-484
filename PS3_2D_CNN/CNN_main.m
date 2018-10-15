@@ -6,21 +6,21 @@
 %version of the correlation kernel
 
 %invent random images and kernels: choose the dimensions
-nrows_image = 3;
-ncols_image = 4;
+nrows_image = 5;
+ncols_image = 6;
 L_layers=2 %define this as a 2-layer network
 %Krows_kernel = 2;
 %Kcols_kernel = 3;
 %generate or load training data;
 %each image has a Krows x Kcols "feature" embedded.
-%the location of this feature (upper left corner) in the image is encoded
+%the location of this feature (upper left co  rner) in the image is encoded
 %in the corresponding target (1 in this location, 0 elsewhere)
 [stimuli,targets,Krows_kernel,Kcols_kernel] = gen_training_data(nrows_image,ncols_image);
 [image_vec_dim,npatterns] = size(stimuli)
 %extract one of the training vectors and reshape it as an image
 image = reshape(stimuli(:,1)',ncols_image,nrows_image)'
 output='paused...'
-pause
+% pause
 
 %for synapses to layer 1, make this a convolutional layer with the
 %following kernel:
@@ -29,12 +29,12 @@ kernel = rand(Krows_kernel,Kcols_kernel)
 %maps (this is for layer1 only)
 [ kmaps ] = fnc_kmaps(kernel,image);
 [nmaps,dummy]=size(kmaps)
-for kk=1:nmaps
-    output='kmap'
-    kmaps{kk}
-    output='paused'
-    pause
-end
+% for kk=1:nmaps
+%     output='kmap'
+%     kmaps{kk}
+%     output='paused'
+%     pause
+% end
 bmaps=cell(L_layers); %need to fill this in
 bparams = cell(L_layers); %need to fill this in
 
@@ -48,6 +48,10 @@ W1 = zeros(kmap_rows,kmap_cols);
 %FIX ME!!!
 %this W matrix operations on a strung-out image vector, and it yields a
 %strung-out feature map
+
+for kk=1:nmaps
+    W1 = W1 + kernel_vec(kk) * kmaps{kk};
+end
 
 W1 %here is the synapse matrix that is equivalent to convolution
 %also want to apply a bias.  For convolution, each output gets same bias
@@ -83,7 +87,7 @@ SOH(conv2D_map)
 output='result of W1*(SOH(image1)): '
 conv_vec'
 output='paused...'
-pause
+% pause
 
 %choose weights hard-coded for pattern-match evaluation
 [num_layer2_neurons,num_inputs] = size(W1)
@@ -115,9 +119,9 @@ err_vecs = targets-x2_vecs
 %test this: do bias perturbations and check resulting E
 [num_est_bias_sensitivities] = compute_num_est_bias_sensitivity_vecs(W_matrices,phi_codes,b_vecs,stimuli,targets);
 
-% [rmserr,E0] = err_eval(all_x_vecs,targets)
-% [num_est_bias_sensitivities] = compute_num_est_bias_sensitivity_vecs(W_matrices,phi_codes,b_vecs,stimuli,targets)
-% %try a perturbation of db in b2_vec:
+[rmserr,E0] = err_eval(all_x_vecs,targets)
+% [num_est_bias_sensitivities] = compute_num_est_bias_sensitivity_vecs(W_matrices,phi_codes,b_vecs,stimuli,targets);
+%try a perturbation of db in b2_vec:
 % eps=0.000001;
 % test_vec = b2_vec;
 % test_vec(1) = test_vec(1)+eps;
@@ -127,7 +131,7 @@ err_vecs = targets-x2_vecs
 % numerical_dE_db = (E1-E0)/eps
 % delta_vecs_L = bias_sensitivity_vecs{2};
 % delta_vec_cum = sum(delta_vecs_L,2)
-%%FINISH TESTING: test all terms of delta_vec_cum, both layers
+%FINISH TESTING: test all terms of delta_vec_cum, both layers
 [L_layers,dummy] = size(num_est_bias_sensitivities);
 for layer=1:L_layers
     this_layer = layer
@@ -180,8 +184,9 @@ eta = 0.01 %learning rate
 %compute system error:
 [rmserr,E_old] = err_eval(all_x_vecs,targets)
 iter=0;
+total_iter = iter;
 iter_pause=100; %pause after this many iterations
-while(1)
+while(total_iter <= 5000)   
     %simulate network and compute sensitivites for layer1:
     [bias_sensitivity_vecs,all_x_vecs] = compute_bias_sensitivity_vecs(W_matrices,phi_codes,b_vecs,stimuli,targets);
     %compute system error:
@@ -223,11 +228,14 @@ while(1)
    % pause
     %consider if should pause for display
     iter=iter+1;
+    total_iter=total_iter+1;
     if iter>iter_pause
         iter=0;
         eta_val = eta
+        total_iter
         E = E_old
         pause(1)
     end
         
 end
+E
