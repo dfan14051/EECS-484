@@ -1,0 +1,7 @@
+   % fnc to correct nodes in matrix memory
+   %YOU MUST WRITE THIS FUNCTION
+   function [vec,delta] = updateRandomNode(MatrixMem,vec)
+     idx = randi(size(vec, 1));
+     sgn(MatrixMem(idx,:) * vec)
+     delta=0; %count how many nodes change their values
+    

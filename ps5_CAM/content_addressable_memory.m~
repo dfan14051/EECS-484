@@ -14,7 +14,7 @@ Avec=matrix2vec(A); %convert image to a bipolar vector
 % EXPLORE ALTERNATIVES: suppress diagonal terms?
 MatrixMem=Avec*Avec'; %outer product 
 for i=1:size(MatrixMem,1)
-   MatrixMem(i,i) = 0;
+   MatrixMem(i,i) =  MatrixMem(i,i) 
 end
 
 % read in some more images...
@@ -22,43 +22,14 @@ end
 A = imread('clubspade.bmp')
 Avec = matrix2vec(A);
 M=Avec*Avec'; % again, consider partial or full suppression of diagonal
-for i=1:size(M,1)
-   M(i,i) = 0;
-end
 MatrixMem=MatrixMem+M; %include more memories by merely adding them into matrix
 
 %ditto for more bitmaps...
-A = imread('printtrash.bmp')
-Avec = matrix2vec(A);
-M=Avec*Avec'; % again, consider partial or full suppression of diagonal
-for i=1:size(M,1)
-   M(i,i) = 0;
-end
-MatrixMem=MatrixMem+M;
-
-A = imread('handheart.bmp')
-Avec = matrix2vec(A);
-M=Avec*Avec'; % again, consider partial or full suppression of diagonal
-for i=1:size(M,1)
-   M(i,i) = 0;
-end
-MatrixMem=MatrixMem+M;
-A = imread('clubspade.bmp')
-A = imread('computersum.bmp')
-Avec = matrix2vec(A);
-M=Avec*Avec'; % again, consider partial or full suppression of diagonal
-for i=1:size(M,1)
-  M(i,i) = 0;
-end
-MatrixMem=MatrixMem+M;
-A = imread('winhelp.bmp')
-Avec = matrix2vec(A);
-M=Avec*Avec'; % again, consider partial or full suppression of diagonal
-for i=1:size(M,1)
-   M(i,i) = 0;
-end
-MatrixMem=MatrixMem+M;
-orth(MatrixMem)
+% A = imread('printtrash.bmp')
+% A = imread('handheart.bmp')
+% A = imread('clubspade.bmp')
+% A = imread('computersum.bmp')
+% A = imread('winhelp.bmp')
 % A = imread('notespell.bmp')
 
 size(MatrixMem) % debug--should be 512x512 for these examples
